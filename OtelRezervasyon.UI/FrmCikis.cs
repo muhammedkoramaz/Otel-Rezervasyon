@@ -88,7 +88,7 @@ namespace OtelRezervasyon.UI
 
                     toplamBorc += myHashMap[listBoxMiniDolap.SelectedItem.ToString()];
 
-                    flpAlinan.Controls.Add(label);
+                    flpAlinan.Controls.Add(label);sdfsdfsdf
                     lblBorc.Text = toplamBorc.ToString();
                 }
             }
