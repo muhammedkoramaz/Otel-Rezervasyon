@@ -1,4 +1,5 @@
 ﻿using OtelRezervasyon.Common;
+using OtelRezervasyon.Extentions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,48 +15,50 @@ namespace OtelRezervasyon.UI
     public partial class FrmMenu : Form
     {
 
-        FrmMusteriKayit frmMusteriKayit = new FrmMusteriKayit();
-        List<MusteriOda> rez = new List<MusteriOda>();
+        FrmMusteriKayit frmMusteriKayit;
+        FrmCikis frmCikis;
+        FrmRapor frmRapor;
+        FrmTcNo frmTcNo;
+
+        List<Rezervasyon> rezervasyonlar = new List<Rezervasyon>();
+        //List<Rezervasyon> cikisiYapilanMusteriler = new List<Rezervasyon>();
 
         public FrmMenu()
         {
             InitializeComponent();
         }
-
-        private void FrmRapor_Load(object sender, EventArgs e)
+        /// <summary>
+        /// Müşteri Kayıt sayfasını açan fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MusteriKayitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-              
-            //todo mantıklı bir yöntem değil müşteri kayıt formu kapanınca bunu oluşturması gerek 
-
-        }
-
-        private void acToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
-            frmMusteriKayit.MdiParent = this;
-            frmMusteriKayit.Show();
-        }
-
-        private void tumRaporlarToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            frmMusteriKayit.WindowState = FormWindowState.Minimized;
-
-            rez = frmMusteriKayit.Tag as List<MusteriOda>;
-
-            if (rez != null)
+            frmMusteriKayit = new FrmMusteriKayit
             {
-            FrmRapor frmRapor = new FrmRapor(rez);
-            frmRapor.MdiParent = this;
-            frmRapor.Show();
+                MdiParent = this
+            };
+            frmMusteriKayit.Show();
+            frmMusteriKayit.WindowState = FormWindowState.Maximized;
+        }
+        /// <summary>
+        /// Rapor sayfasını açan fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TumRaporlarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            rezervasyonlar = frmCikis.Tag as List<Rezervasyon>;
+
+            if (rezervasyonlar != null)
+            {
+                frmRapor = new FrmRapor(rezervasyonlar)
+                {
+                    MdiParent = this
+                };
+                frmRapor.Show();
+                this.MinimizeAndShowChildForm<FrmRapor>();
             }
             else
             {
@@ -63,21 +66,59 @@ namespace OtelRezervasyon.UI
             }
         }
 
-        private void musteriCikisYapToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Müşteri Çıkış sayfasını açan fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MusteriCikisYapToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            rez = frmMusteriKayit.Tag as List<MusteriOda>;
+            rezervasyonlar = frmMusteriKayit.Tag as List<Rezervasyon>;
 
-            if (rez != null)
+            if (rezervasyonlar != null)
             {
-                frmMusteriKayit.WindowState = FormWindowState.Minimized;
-                FrmCikis frmCikis = new FrmCikis(rez);
-                frmCikis.MdiParent = this;
+                frmCikis = new FrmCikis(rezervasyonlar)
+                {
+                    MdiParent = this
+                };
                 frmCikis.Show();
+
+                this.MinimizeAndShowChildForm<FrmCikis>();
+
             }
             else
             {
                 MessageBox.Show("Çıkışı Yapılacak Müşteri Bulunmamaktadır.");
             }
+        }
+        /// <summary>
+        /// TC gönderme sayfasını açan fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TcGonderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            rezervasyonlar = frmMusteriKayit.Tag as List<Rezervasyon>;
+            if (rezervasyonlar != null)
+            {
+                frmTcNo = new FrmTcNo(rezervasyonlar)
+                {
+                    MdiParent = this
+                };
+                frmTcNo.Show();
+
+                this.MinimizeAndShowChildForm<FrmTcNo>();
+            }
+            else
+            {
+                MessageBox.Show("T.C Kimlik Numarası Listelenecek Bir Müşteri Bulunamadı.");
+            }
+
+        }
+
+        private void FrmMenu_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

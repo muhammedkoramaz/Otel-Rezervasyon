@@ -1,4 +1,5 @@
 ﻿using OtelRezervasyon.Common;
+using OtelRezervasyon.Extentions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace OtelRezervasyon.UI
 {
     public partial class FrmMusteriKayit : Form
@@ -18,176 +20,188 @@ namespace OtelRezervasyon.UI
         {
             InitializeComponent();
         }
-        List<MusteriOda> musteriOdalar = new List<MusteriOda>();
-        Oda oda1 = new Oda();
-        MusteriOda secilenOda;
-        private void FrmMusteriKayit_Load(object sender, EventArgs e)
-        {
-            for (int row = 1; row < 4; row++)
-            {
-                Label label = new Label();
-                label.Text = row.ToString() + " Kişilik Odalar";
-                flRooms.Controls.Add(label);
-                flRooms.SetFlowBreak(label, true);
-                for (int column = 1; column <= 10; column++)
-                {
-                    Button btn = new Button();
-                    btn.Text = ((row * 100) + column).ToString();
-                    btn.Width = 40;
-                    btn.Height = 40;
-                    btn.BackColor = Color.Green;
-                    btn.Tag = new MusteriOda()
-                    {
-                        KalinacakOda = new Oda()
-                        {
-                            OdaIsmi = ((row * 100) + column).ToString(),
-                            OdaKisiSayisi = row,
-                            OdaUcreti = row * 50,
-                            OdaDurum = OdaDurum.Bos,
-                        },
-                    };
-                    btn.MouseUp += Btn_Click;
 
-                    flRooms.Controls.Add(btn);
-                }
-            }
-            btnKral.Tag = new MusteriOda()
-            {
-                KalinacakOda = new Oda()
-                {
-                    OdaIsmi = "Kral Dairesi",
-                    OdaKisiSayisi = 5,
-                    OdaUcreti = 1000,
-                    OdaDurum = OdaDurum.Bos,
-                },
-                Musteri = new Musteri()
-                {
-                    MusteriAd = "",
-                    MusteriTC = "",
-                    Tel = "",
-                }
-            };
-        }
+        readonly List<Rezervasyon> rezervasyonlar = new List<Rezervasyon>();
+
+        Rezervasyon secilenOda = new Rezervasyon();
+
         Button tiklanilanButton = null;
 
-        private void Btn_Click(object sender, MouseEventArgs e)
+        private void FrmMusteriKayit_Load(object sender, EventArgs e)
         {
-            string odaAdi = ((Button)sender).Text.ToString();
+            for (int odaKisiSayisi = 1; odaKisiSayisi < 4; odaKisiSayisi++)
+            {
+                // Oda kişi sayıları labellara yazdırılıyor. 
+                Label odaKisiSayisiLabel = new Label
+                {
+                    Text = odaKisiSayisi.ToString() + " Kişilik Odalar"
+                };
+
+                flRooms.Controls.Add(odaKisiSayisiLabel);
+                flRooms.SetFlowBreak(odaKisiSayisiLabel, true);
+
+                for (int odaNumarasi = 1; odaNumarasi <= 10; odaNumarasi++)
+                {
+                    // Oda isimleri 101,205 vs. şekilde oluşturuluyor.
+                    string odaIsmi = ((odaKisiSayisi * 100) + odaNumarasi).ToString();
+
+                    Button btnOda = OdaButtonOluştur(odaIsmi, odaKisiSayisi, odaKisiSayisi * 50);
+                    btnOda.MouseUp += OdaButton_Click;
+
+                    flRooms.Controls.Add(btnOda);
+                }
+            }
+            // Kral Dairesi oluşturuluyor.
+            btnKral.Tag = RezervasyonOlustur("Kral Dairesi", 5, 1000);
+        }
+        /// <summary>
+        /// Otelde bulunan odaları buton halide, özelliklerine göre oluşturan fonksiyon.
+        /// </summary>
+        /// <param name="odaIsmi"></param>
+        /// <param name="odaKisiSayisi"></param>
+        /// <param name="odaUcreti"></param>
+        /// <returns></returns>
+        private Button OdaButtonOluştur(string odaIsmi, int odaKisiSayisi, int odaUcreti)
+        {
+            Button odaButton = new Button
+            {
+                Text = odaIsmi,
+                Width = 40,
+                Height = 40,
+                BackColor = Color.Green,
+                Tag = RezervasyonOlustur(odaIsmi, odaKisiSayisi, odaUcreti)
+            };
+
+            odaButton.MouseUp += OdaButton_Click;
+
+            return odaButton;
+        }
+
+        /// <summary>
+        /// Her bir oda için rezervasyon oluşturma fonksiyonu.
+        /// </summary>
+        /// <param name="odaIsmi"></param>
+        /// <param name="odaKisiSayisi"></param>
+        /// <param name="odaUcreti"></param>
+        /// <returns></returns>
+        private Rezervasyon RezervasyonOlustur(string odaIsmi, int odaKisiSayisi, int odaUcreti)
+        {
+            Rezervasyon odaRezervasyon = new Rezervasyon
+            {
+                KalinacakOda = new Oda
+                {
+                    OdaIsmi = odaIsmi,
+                    OdaKisiSayisi = odaKisiSayisi,
+                    OdaUcreti = odaUcreti,
+                    OdaDurum = OdaDurum.Bos,
+                }
+            };
+            return odaRezervasyon;
+        }
+        /// <summary>
+        /// Butona eğer sağ tıklanırsa temizlik-boş durumları arasında geçiş yapma ve 
+        /// sol tıklanırsa tıklanılan butonun oda bilgilerini ilgili değişkene atma fonksiyonu.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OdaButton_Click(object sender, MouseEventArgs e)
+        {   
+            string odaAdi = ((Button)sender).Text == "" ? "Kral Odası" : ((Button)sender).Text.ToString();
             tiklanilanButton = sender as Button;
-            secilenOda = tiklanilanButton.Tag as MusteriOda;
+            secilenOda = tiklanilanButton.Tag as Rezervasyon;
 
             switch (e.Button)
             {
                 case MouseButtons.Left:
-                    //label4.Tag = ((Button)sender).Tag;
-                    tiklanilanButton.Tag  = ((Button)sender).Tag;
+                    tiklanilanButton.Tag = ((Button)sender).Tag;
                     label4.Text = odaAdi + " no'lu oda seçili.";
                     gbMusteriBilgiler.Enabled = true;
                     break;
                 case MouseButtons.Right:
                     OdaDurumDegistir(secilenOda.KalinacakOda.OdaDurum);
                     break;
-
+                default:
+                    break;
             }
         }
-        private void btnKaydet_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Kaydet butonuna tıklandığında eğer oda dolu ise uyarı veren ve eğer oda boş ise rezervasyon kayıt yapan fonksiyon.
+        /// Rezervasyon işlemi yapıldıktan sonra o odanı durumunu ve rengini değiştirir.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void KaydetButton_Click(object sender, EventArgs e)
         {
-            MusteriOda odaRez = tiklanilanButton.Tag as MusteriOda;
-            if (odaRez.KalinacakOda.OdaDurum == OdaDurum.Bos 
-                || odaRez.KalinacakOda.OdaDurum == OdaDurum.Temizlik)
+            if (!(txtMusteriAd.Text.IsValidFullName()
+                && txtTC.Text.IsValidTCKN()
+                && txtTel.Text.IsValidPhoneNumber()))
             {
-                odaRez.Musteri = new Musteri()
-                {
-                    MusteriAd = txtMusteriAd.Text,
-                    MusteriTC = txtTC.Text,
-                    Tel = txtTel.Text,
-                };
-                odaRez.KalinacakOda.OdaDurum = OdaDurum.Dolu;
-                musteriOdalar.Add(odaRez);
-                tiklanilanButton.BackColor = Color.Red;
-                MessageBox.Show("Kayıt Başarılı.");
-                this.Tag = musteriOdalar;
-                MusteriBilgileriniTemizle();
-                //MusteriOlustur();
-
+                MessageBox.Show("Doğru değil.");
+                return;
             }
-            else
+            var odaRezervasyon = tiklanilanButton.Tag as Rezervasyon;
+            if (odaRezervasyon.KalinacakOda.OdaDurum != OdaDurum.Bos
+                && odaRezervasyon.KalinacakOda.OdaDurum != OdaDurum.Temizlik)
             {
                 MessageBox.Show("Oda Dolu.");
+                MusteriBilgileriniTemizle();
+                return;
             }
+
+            odaRezervasyon.Musteri = new Musteri()
+            {
+                MusteriAd = txtMusteriAd.Text,
+                MusteriTC = txtTC.Text,
+                Tel = txtTel.Text,
+            };
+            odaRezervasyon.GirisTarihi = dtpGiris.Value;
+            odaRezervasyon.KalinacakOda.OdaDurum = OdaDurum.Dolu;
+            rezervasyonlar.Add(odaRezervasyon);
+
+            tiklanilanButton.BackColor = Color.Red;
+
+            this.Tag = rezervasyonlar;
+
+            MusteriBilgileriniTemizle();
+
+            MessageBox.Show("Kayıt Başarılı.");
+
         }
+        /// <summary>
+        /// Formda bulunan input componentlerini temizleme fonksiyonu.
+        /// </summary>
         private void MusteriBilgileriniTemizle()
         {
-            foreach (Control item in gbMusteriBilgiler.Controls)
-            {
-                if (item is TextBox)
-                {
-                    item.Text = "";
-                }
-            }
-        }
-        void MusteriOlustur()
-        {
-            //todo if kontrolleri yapılacak 
-            musteriOdalar.Add(new MusteriOda()
-            {
-                Musteri = new Musteri()
-                {
-                    MusteriAd = txtMusteriAd.Text,
-                    MusteriTC = txtTC.Text,
-                    Tel = txtTel.Text,
-                },
-                GirisTarihi = dateTimePicker1.Value,
-                KalinacakOda = label4.Tag as Oda,
+            // Müşteri groupboxının içindeki textbox ve maskedtextbox elementlerinde dönüyor ve textlerini boş yapıyor.
+            gbMusteriBilgiler.Controls.OfType<TextBox>()
+                .Concat<Control>(gbMusteriBilgiler.Controls.OfType<MaskedTextBox>()) // Bu metot iki farklı kolleksiyonu birleştirir.
+                .ToList()
+                .ForEach(tb => tb.Text = "");
 
-            });
-
+            dtpGiris.Value = DateTime.Now;
+            tiklanilanButton = null;
+            label4.Text = "Oda Seçiniz.";
+            gbMusteriBilgiler.Enabled = false;
         }
-        void ButonuEtkisizlestir()
-        {
-            //todo oda sayısı kontrolu
-            Oda oda = label4.Tag as Oda;
-            foreach (Control item in flRooms.Controls)
-            {
-                if (item is Button)
-                {
-                    if (item.Text.ToString() == oda.OdaIsmi.ToString()
-                        )
-                    {
-                        item.BackColor = Color.Red;
-                        item.Enabled = false;
-                    }
-                }
-            }
-        }
-
-        private void btnKral_Click(object sender, EventArgs e)
-        {
-            gbMusteriBilgiler.Enabled = true;
-            tiklanilanButton = sender as Button;
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            FrmCikis frmCikis = new FrmCikis(musteriOdalar);
-            frmCikis.Show();
-        }
+        /// <summary>
+        /// Odanın boş, dolu ve temizlik durumunu ayarlayan fonksiyon.
+        /// </summary>
+        /// <param name="odaDurum"></param>
         private void OdaDurumDegistir(OdaDurum odaDurum)
         {
             if (odaDurum == OdaDurum.Bos)
             {
-                secilenOda = tiklanilanButton.Tag as MusteriOda;
+                secilenOda = tiklanilanButton.Tag as Rezervasyon;
                 secilenOda.KalinacakOda.OdaDurum = OdaDurum.Temizlik;
                 tiklanilanButton.BackColor = Color.Cyan;
                 MessageBox.Show("Oda Durumu " + OdaDurum.Temizlik.ToString() + " Olarak Değiştirildi.");
             }
             else if (odaDurum == OdaDurum.Temizlik)
             {
-                secilenOda = tiklanilanButton.Tag as MusteriOda;
+                secilenOda = tiklanilanButton.Tag as Rezervasyon;
                 secilenOda.KalinacakOda.OdaDurum = OdaDurum.Bos;
                 tiklanilanButton.BackColor = Color.Green;
                 MessageBox.Show("Oda Durumu " + OdaDurum.Bos.ToString() + " Olarak Değiştirildi.");
-
             }
         }
     }

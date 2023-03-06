@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Musteri.cs" />
-    <Compile Include="MusteriOda.cs" />
+    <Compile Include="Rezervasyon.cs" />
     <Compile Include="Oda.cs" />
     <Compile Include="OdaDurum.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

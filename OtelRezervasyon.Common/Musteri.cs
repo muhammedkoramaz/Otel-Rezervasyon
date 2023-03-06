@@ -15,6 +15,5 @@ namespace OtelRezervasyon.Common
         {
             return MusteriAd; 
         }
-
     }
 }

@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace OtelRezervasyon.Common
 {
-    public class MusteriOda
+    public class Rezervasyon
     {
-        public Musteri Musteri { get; set; }
+        //İçi boş müşteri çağırmaktansa burada default olarak newliyorum. 
+        public Musteri Musteri { get; set; } = new Musteri();
         public Oda KalinacakOda { get; set; }
         public int ToplamBorc { get; set; }
         public DateTime GirisTarihi { get; set; }

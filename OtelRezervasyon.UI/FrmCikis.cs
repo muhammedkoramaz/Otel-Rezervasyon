@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,102 +14,163 @@ namespace OtelRezervasyon.UI
 {
     public partial class FrmCikis : Form
     {
-        private List<MusteriOda> musteriOdalar;
-        Dictionary<string,int> myHashMap = new Dictionary<string, int>();
-        int sayac=1 ,toplamBorc =0;
+        private List<Rezervasyon> musteriOdalar;
+        private List<Rezervasyon> cikisiYapilanMusteriler = new List<Rezervasyon>();
+        //private Rezervasyon rezervasyon
+        //private MusteriOda musteriCikisBilgi = new MusteriOda();
+        Musteri musteri = new Musteri();
+        Dictionary<string, int> buzdolabiIcındekiler = new Dictionary<string, int>();
+        int toplamBorc = 0;
 
         public FrmCikis()
         {
             InitializeComponent();
         }
 
-        public FrmCikis(List<MusteriOda> musteriOdalar) :this()
+        public FrmCikis(List<Rezervasyon> musteriOdalar) : this()
         {
             this.musteriOdalar = musteriOdalar;
         }
 
         private void FrmCikis_Load(object sender, EventArgs e)
         {
+            ComboBoxDoldur();
+            ListBoxDoldur();
+        }
+        /// <summary>
+        /// Müşteri isimlerinin bulunduğu combobox'a verileri yazdıran fonksiyon.
+        /// </summary>
+        private void ComboBoxDoldur()
+        {
             foreach (var item in musteriOdalar)
             {
                 cmbAdSoyad.Items.Add(item.Musteri);
-               
             }
-            myHashMap.Add("Cikolata", 5);
-            myHashMap.Add("Su", 6);
-            myHashMap.Add("Kola", 5);
-            myHashMap.Add("Icki", 5);
-            listBoxMiniDolap.Items.AddRange(myHashMap.Keys.ToArray());
         }
-
+        /// <summary>
+        /// Mini Buzdolabında bulunacak itemleri listboxa yazdıracak fonksiyon.
+        /// </summary>
+        private void ListBoxDoldur()
+        {
+            buzdolabiIcındekiler.Add("Cikolata", 5);
+            buzdolabiIcındekiler.Add("Su", 5);
+            buzdolabiIcındekiler.Add("Kola", 10);
+            buzdolabiIcındekiler.Add("Ayran", 7);
+            buzdolabiIcındekiler.Add("Viski", 60);
+            buzdolabiIcındekiler.Add("Sarap", 40);
+            listBoxMiniDolap.Items.AddRange(buzdolabiIcındekiler.Keys.ToArray());
+        }
+        /// <summary>
+        /// Comboboxtan seçilecek müşteri ismine göre toplam borcu hesaplayacak fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cmbAdSoyad_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Musteri musteri = cmbAdSoyad.SelectedItem as Musteri;
-            var sorgu = musteriOdalar.Where(a => a.Musteri.MusteriAd == musteri.MusteriAd);
-            foreach (MusteriOda item in sorgu)
-            {
-                toplamBorc = item.KalinacakOda.OdaUcreti;
-               
+            Rezervasyon rezervasyonYapanMusteriBilgileri = RezervasyonBilgileriCek();
 
-            }
-            lblBorc.Text = toplamBorc.ToString();
+            dtpCikis.Enabled = true;
+            //dtpCikis.Value = DateTime.Now;
+
+            toplamBorc = 0;
+            lblBorc.Text = "";
+            listView1.Items.Clear();
+
+            toplamBorc = rezervasyonYapanMusteriBilgileri.KalinacakOda.OdaUcreti;
         }
-
+        /// <summary>
+        /// Comboboxtan seçilecek müşterinin rezervasyon bilgilerini getiren fonksiyon.
+        /// </summary>
+        /// <returns></returns>
+        private Rezervasyon RezervasyonBilgileriCek()
+        {
+            musteri = cmbAdSoyad.SelectedItem as Musteri;
+            if (musteri != null)
+            {
+                return musteriOdalar.FirstOrDefault(a => a.Musteri.MusteriAd == musteri.MusteriAd);
+            }
+            return null;
+        }
+        /// <summary>
+        /// Çıkış yap butonuna basıldığı zaman tetiklenecek fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnCikisYap_Click(object sender, EventArgs e)
         {
-            FrmRapor frmRapor = new FrmRapor(musteriOdalar);
-            frmRapor.Show();
-        }
+            Rezervasyon rezervasyonYapanMusteriBilgileri = RezervasyonBilgileriCek();
+            rezervasyonYapanMusteriBilgileri.CikisTarihi = dtpCikis.Value;
+            rezervasyonYapanMusteriBilgileri.ToplamBorc = toplamBorc;
+            rezervasyonYapanMusteriBilgileri.KalinacakOda.OdaDurum = OdaDurum.Bos;
 
+            lblBorc.Visible = false;
+            gbBuzdolabi.Enabled = false;
+            listView1.Items.Clear();
+
+            cikisiYapilanMusteriler.Add(rezervasyonYapanMusteriBilgileri);
+            this.Tag = cikisiYapilanMusteriler;
+
+            MessageBox.Show("Müşteri Çıkışı Onaylandı.");
+        }
+        /// <summary>
+        /// Mini dolaptaki itemlere tıklandıkça alınanlar listviewine toplam tutarları ile birlikte ekleyen fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void listBoxMiniDolap_SelectedIndexChanged(object sender, EventArgs e)
         {
+            string selected = listBoxMiniDolap.SelectedItem.ToString();
+            int borc = buzdolabiIcındekiler[selected];
+            int adet = 1;
 
-            //listbox textine x2 falan yazsın 
-            //if (listBox1.Items.Contains(listBoxMiniDolap.SelectedItem))
-            //{
-            //string flbItem = "";
-
-            //listBox1.Items.Remove(listBoxMiniDolap.SelectedItem);
-            //listBox1.Items.Add(listBoxMiniDolap.SelectedItem);
-            //if (true)
-            //{
-
-            //}
-            if (label.Text == listBoxMiniDolap.SelectedItem.ToString())
+            // ListView'daki tüm öğeleri kontrol et
+            foreach (ListViewItem item in listView1.Items)
             {
-
-                sayac++;
-                label.Text = listBoxMiniDolap.SelectedItem.ToString() + "x" + sayac.ToString();
-                foreach (Control item in flpAlinan.Controls)
+                // Eğer seçilen öğe zaten ListView'da varsa
+                if (item.SubItems[0].Text == selected)
                 {
+                    adet = int.Parse(item.SubItems[2].Text) + 1;
+                    item.SubItems[2].Text = adet.ToString();
+                    item.SubItems[3].Text = (borc * adet).ToString();
 
-
-
-                    toplamBorc += myHashMap[listBoxMiniDolap.SelectedItem.ToString()];
-
-                    flpAlinan.Controls.Add(label);asdas
-                    lblBorc.Text = toplamBorc.ToString();
+                    // Toplam borcu güncelleme
+                    toplamBorc += borc;
+                    lblBorc.Text = toplamBorc.ToString() + " TL";
+                    return;
                 }
             }
-            else
-            {
-                label.Text = listBoxMiniDolap.SelectedItem.ToString();
-            }
 
+            // Eğer seçilen öğe ListView'da yoksa, yeni bir öğe oluştur
+            ListViewItem newListItem = new ListViewItem(selected);
+            newListItem.SubItems.Add(borc.ToString());
+            newListItem.SubItems.Add(adet.ToString());
+            newListItem.SubItems.Add((borc * adet).ToString());
 
-            //}
-            //else
-            //{
-            //    label.Text = listBoxMiniDolap.SelectedItem.ToString();
-            //    flpAlinan.Controls.Add(label);
+            // Toplam borcu güncelleme
+            toplamBorc += borc;
+            lblBorc.Text = toplamBorc.ToString();
 
-            //    listBox1.Items.Add(listBoxMiniDolap.SelectedItem);
-            //    toplamBorc += myHashMap[listBoxMiniDolap.SelectedItem.ToString()];
-            //}
+            listView1.Items.Add(newListItem);
+        }
+        DateTime girisTarih = DateTime.Now;
 
+        /// <summary>
+        /// Datetimepicker'dan seçilen tarihlere göre fiyat hesaplayan fonksiyon.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dtpCikis_ValueChanged(object sender, EventArgs e)
+        {
+            Rezervasyon rezervasyonYapanMusteriBilgileri = RezervasyonBilgileriCek();
+            girisTarih = rezervasyonYapanMusteriBilgileri.GirisTarihi;
 
-            //}
-
+            int gunFarki = ((dtpCikis.Value.Date) - (girisTarih.Date)).Days;
+            toplamBorc *= gunFarki;
+            lblBorc.Text = toplamBorc.ToString();
+            lblBorc.Visible = true;
+            gbBuzdolabi.Enabled = true;
         }
     }
 }
+
+
